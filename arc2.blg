@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2011)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: arc2.aux
+The style file: mn2e.bst
+Database file #1: arc2.bib
+Warning--I didn't find a database entry for "bas+10a"
+Warning--I didn't find a database entry for "bas+10b"
+You've used 17 entries,
+            2601 wiz_defined-function locations,
+            641 strings with 7652 characters,
+and the built_in function-call counts, 9775 in all, are:
+= -- 861
+> -- 931
+< -- 4
++ -- 330
+- -- 330
+* -- 1009
+:= -- 1811
+add.period$ -- 0
+call.type$ -- 17
+change.case$ -- 181
+chr.to.int$ -- 17
+cite$ -- 17
+duplicate$ -- 207
+empty$ -- 303
+format.name$ -- 347
+if$ -- 1748
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 15
+newline$ -- 55
+num.names$ -- 68
+pop$ -- 161
+preamble$ -- 1
+purify$ -- 195
+quote$ -- 0
+skip$ -- 295
+stack$ -- 0
+substring$ -- 332
+swap$ -- 33
+text.length$ -- 4
+text.prefix$ -- 110
+top$ -- 0
+type$ -- 153
+warning$ -- 0
+while$ -- 63
+width$ -- 0
+write$ -- 176
+(There were 2 warnings)
