@@ -377,7 +377,66 @@ correctoin and summarise our conclusions in Section~\ref{sec:concl}.
 \section{Detection and correction of individual discontinuities}
 \label{sec:jumps}
 
-[Hannu to provide text and plots for this section]
+The SPSD correction is roughly divided into three phases: the detection
+of possible discontinuities, the identification of the found discontinuity 
+candidates, and finally the correction of candidates identified as real
+discontinuities.
+
+
+% Step 1: Identification
+% ----------------------
+The SPSD candidate identification is carried out by first denoising the 
+light curve in a way that aims to smooth the short time-scale scatter
+while keeping discontinuities intact. We do this by modelling the flux 
+as a Gaussian Process with an exponential kernel, and use the mean of the GP 
+predictive distribution to represent the denoised light curve. Next, we
+calculate the derivative of the light curve and identify the cadences where the
+absolute slope deviates significantly from the slope distribution of the entire
+denoised light curve as SPSD candidates. These steps are illustrated in 
+Fig.~\ref{fig:jumps_identification}.
+
+
+% Step 2: classification
+% ----------------------
+The Kepler light curves contain several types of signals that can cause rapid
+changes in the flux. Besides the instrumental SPSDs that we want to find and correct, 
+we also have astrophysical signals---such as planetary transits, binary eclipses, and stellar 
+flares---that we do not want to remove. Thus, an automated SPSD correction routine
+needs a way to identify an SPSD from these other discontinuities. We use a 
+Bayesian information criterion (BIC)-based model selection approach for the
+SPSD candidate classification. The method fits four different models to each SPSD candidate
+(false alarm, transit-like, flare, or SPSD), modelling the flux baseline with a
+Gaussian Process, and classifies the SPSD candidate based on the model BIC-values.
+
+% Step 3: Correction
+% ------------------
+Finally, we correct the identified SPSDs based on the fitted discontinuity model and
+save the information about the identified discontinuities for later use. The results
+for an example light curve with several injected SPSD and transit signals are shown 
+in Fig.~\ref{fig:jumps_classification}.
+
+\begin{figure}
+ \centering
+ \includegraphics[width=\columnwidth]{jumps_identification.pdf}
+ \caption{An example illustrating the basic steps for the SPSD candidate search: 
+  and artificial light curve containing long-period variability, white noise,
+  correlated noise, outliers, and an SPSD signal (a),
+  the denoised light curve (b), and the absolute slopes of the denoised light
+  curve (c) with the 1--6 standard deviations of the absolute slope distribution 
+  marked as horizontal lines.}
+ \label{fig:jumps_identification}
+\end{figure}
+
+\begin{figure*}
+ \centering
+ \includegraphics[width=\textwidth]{jumps_classification.pdf}
+ \caption{The results of the SPSD search for a single light curve. The identified SPSDs
+  are marked with dashed vertical lines, the identified transits as wide dashes, and the
+  identified false-alarms as dotted lines. One transit-like feature has been mistakingly
+  identified as false-alarm, and the search method has been told to ignore the single 
+  high-amplitude SPSD.}
+ \label{fig:jumps_classification}
+\end{figure*}
 
 \section{Optimized use of the CBVs}
 \label{sec:cbv}
