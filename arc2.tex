@@ -413,7 +413,7 @@ Gaussian Process, and classifies the SPSD candidate based on the model BIC-value
 Finally, we correct the identified SPSDs based on the fitted discontinuity model and
 save the information about the identified discontinuities for later use. The results
 for an example light curve with several injected SPSD and transit signals are shown 
-in Fig.~\ref{fig:jumps_classification}.
+in Figs.~\ref{fig:jumps_classification} and \ref{fig:jumps_classification_closeup}.
 
 \begin{figure}
  \centering
@@ -433,10 +433,19 @@ in Fig.~\ref{fig:jumps_classification}.
  \caption{The results of the SPSD search for a single light curve. The identified SPSDs
   are marked with dashed vertical lines, the identified transits as wide dashes, and the
   identified false-alarms as dotted lines. One transit-like feature has been mistakingly
-  identified as false-alarm, and the search method has been told to ignore the single 
+  identified as a false-alarm, and the search method has been told to ignore the single 
   high-amplitude SPSD.}
  \label{fig:jumps_classification}
 \end{figure*}
+
+\begin{figure}
+ \centering
+ \includegraphics[width=\columnwidth]{jumps_classification_b.pdf}
+ \caption{Closeup of the model-selection process for two of the jump candidates identified
+   from Fig.~\ref{fig:jumps_classification}. The rejected models are shown with dashed
+   grey lines and the chosen model as a solid line.}
+ \label{fig:jumps_classification_closeup}
+\end{figure}
 
 \section{Optimized use of the CBVs}
 \label{sec:cbv}
