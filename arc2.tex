@@ -51,7 +51,7 @@
   T.\ Evans$^{1}$ \\
   $^{1}$Sub-department of Astrophysics, Department of Physics,
   University of Oxford, Oxford OX1 3RH, UK\\
-  $^{2}$Pattern Analysis and Machine Learining Group, Department of
+  $^{2}$Machine Learning Research Group, Department of
   Engineering Science, University of Oxford, Oxford OX1 3PJ, UK}
 \begin{document}
 
@@ -293,7 +293,7 @@ linking each systematic trend to each light curve. The ARC uses a
 variational inference framework to carry out Bayesian inference under the linear basis
 model (see the Appendix of paper I for full details), which is
 extremely fast: once the basis vectors have been identified,
-correcting all the light curves takes only 15 CPU minutes per quarter (SR TO CHECK).
+correcting all the light curves takes only some 10 CPU minutes per quarter.
 
 The trend smoothing and the use of shrinkage priors mean that the ARC should be
 even less prone to overfitting and noise injection than the PDC-MAP,
@@ -505,7 +505,7 @@ themselves are affected by overfitting in the initial, maximum
 likelihood step. Furthermore, a fixed prior, as in the MAP model,
 does not guarantee model shrinkage as required to avoid overfitting. 
 
-To reduce the risk of overfitting further, we propose to use priors
+To reduce the risk of overfitting further, we regularise the model using priors
 which specifically penalise larger weights, and make it less likely
 that one basis vector will compensate for another. A natural choice
 for this is to use zero-mean Gaussian priors:
@@ -514,7 +514,7 @@ p(w_j|\alpha_j) = \frac{\alpha_j}{\sqrt{2 \pi}} \exp\left(-\alpha_j w_j^2 / 2 \r
 \end{equation}
 for each $j$ (the individual prior weights are treated as
 mutually independent).  Furthermore, we do not fix the priors, but
-instead treat the inverse variances, $\boldsymbol{\alpha}$, as
+instead treat the inverse variances, $\boldsymbol{\alpha} = \{\alpha_j\}$, as
 parameters themselves, subject to their own prior
 $p(\boldsymbol{\alpha})$, for which we use a Gamma
 distribution\footnote{Our choice of priors over $\mathbf{w}$ and
