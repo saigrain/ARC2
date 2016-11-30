@@ -38,12 +38,13 @@
 \usepackage{amsmath}
 \usepackage{bm}
 \usepackage{color}
+\usepackage{url}
 
 %%%%% AUTHORS - PLACE YOUR OWN MACROS HERE %%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\title{Improving the removal of systematics in Kepler data}
+\title{Robust, open-source removal of systematics in Kepler data}
 
 \author[S. Aigrain et al.]{S. Aigrain$^{1}$\thanks{E-mail:
     suzanne.aigrain@astro.ox.ac.uk}, H. Parviainen$^{1}$,
@@ -76,7 +77,7 @@ TBD
 During almost 5 years of operations, the Kepler space mission produced
 continuous, high-precision light curves for over 150\,000 stars, with
 a cadence of 29.4\,min. This forms a very rich dataset for a wide
-range of stellar variability studies. However, the light curves also
+range of exoplanet and stellar variability studies. However, the light curves also
 contain instrumental artefacts and systematic trends. Correcting these while
 preserving `real' astrophysical variability is challenging, but very
 important for the community to make the most of the Kepler
@@ -89,40 +90,36 @@ measurements in each of the individual pixels falling within a
 pre-defined area around each star. These have been corrected for known
 instrumental effects at the pixel level, but are otherwise `raw'. The
 light curve files contain two versions of the light curve, dubbed SAP
-(simple aperture photometry) and PDC (pre-search data
-conditioning). \citet{jen+10,KeplerDataProcHandbook} give an overview
+(Simple Aperture Photometry) and PDC (Pre-search Data
+Conditioning). \citet{jen+10} and \citet{KeplerDataProcHandbook} give an overview
 of the data processing steps involved in producing both the target
 pixel files and the light curves. The SAP light curves are obtained by
 summing the flux falling within a subset of the pixels included in the
 target pixel files, and applying a correction for background flux
 \citep{twi+10a}. The PDC light curves result from additional
-processing steps designed to remove instrumental artefacts and
+processing steps designed to remove instrumental artifacts and
 systematics \citep{stu+12a,smi+12}.  As its name indicates, the PDC
 pipeline is primarily intended to ready the data for planetary transit
 searches, and is not specifically optimized to preserve other forms of
-astrophysical variability.  The PDC data are nonetheless widely used
-for variability studies \citep[for example stellar rotation studies,
+astrophysical variability. The PDC data are nonetheless widely used
+for both transit searches and variability studies \citep[for example stellar rotation studies,
 see e.g.][]{rei+13,nie+13,mcq+13a,mcq+13b,mcq+14}, because they are
-the only widely available set of light curves which cover the full
-baseline of Kepler observations and are relatively free of the
-systematics which dominate the SAP light curves. However, there are
-also known problems: different versions of the PDC pipeline are, to
-some degree, prone to over-correction (removal of real astrophysical
+the only widely available set of light curves which a) cover the full target list and time coverage the \emph{Kepler} mission, and b) are free of many of the
+systematics, which dominate the SAP light curves. However, some versions of the PDC pipeline were prone to over-correction (removal of real astrophysical
 variability and injection of additional noise, see
-e.g. \citealt{rob+13}). This motivated us to investigate alternative
-methods to identify and correct systematic trends, with a specific
-emphasis on retaining real astrophysical variability.
+e.g. \citealt{rob+13}). Additionally, the PDC pipeline is not in the public domain, making it difficult to reproduce results based on this pipeline independently, or to perform independent evaluations of the way in which it affects different types of stellar and planetary signals (as required, for example, for planet incidence studies). This motivated us to develop an alternative procedure to correct systematic trends and artifacts in \emph{Kepler} data, aiming to match (or improve on) the performance of the PDC pipeline, but with a specific
+emphasis on retaining real astrophysical variability, and a commitment to making the code publicly available. 
 
 The Kepler detector consists of 21 modules arranged in a $5 \times 5$
 grid with missing corners, each containing two
-$4{\rm K}\times 2 {\rm K}$ CCDs \citep{KeplerInstHandbook}. The two
+$4{\rm K}\times 2 {\rm K}$ CCDs \citep{KeplerInstrumentHandbook}. The two
 halves of each CCD are read out separately, leading to 4 output
 channels per module. Throughout this paper, we refer to each module
 plus output channel combination as a modout and identify it as $X.Y$
 where $X$ is the module number (2 to 24) and $Y$ the output channel number (1 to
 4). For the tests described in this paper, we focussed on 4 modules: 2.1, 7.3,
 13.1 and 17.2. These were selected because they are collectively
-representative of the range of systematic effects which affect Kepler
+representative of the range of systematic effects, which affect Kepler
 data: 2.1 is located near the upper left corner of the field of view
 and is particularly sensitive to focus changes, 7.3 is `atypically
 typical', 13.1 is at the centre of the focal plane, and 17.2 contains
@@ -139,25 +136,23 @@ year), so the systematics observed in a given star's light curve in
 quarters (say) 3 and 7 tend to be mutually similar. The systematics
 are easier to correct in some quarters than in others: in this paper
 we use quarter 3 (Q3) as an example of a relatively well behaved quarter,
-and quarter 2 (Q2) as an example of a problematic quarter.
+and quarter 6 (Q6) as an example of a problematic quarter.
 
 \subsection{Systematics removal in the PDC pipeline}
 \label{sec:pdc}
 
 \begin{figure*}
   \centering
-  \includegraphics[width=0.49\linewidth]{fig1a.png} \hfill
-  \includegraphics[width=0.49\linewidth]{fig1b.png}
+  \includegraphics[width=\linewidth]{arc2_examples_q3.pdf} 
   \caption{Example light curves before and after systematics
-    correction (random selection from Q6, modout 7.3). The left column shows the SAP light curve for each
+    correction (random selection from Q3, modout 7.3). The left column shows the SAP light curve for each
     object in grey, with the corrections applied by the PDC-MAP and
     by our own pipeline in cyan and magenta, respectively. The right column
     shows the corrected light curves (PDC-MAP in cyan, this work in
     magenta). In both columns, arbitrary vertical offsets have been applied
-    to separate the different curves. The PDC-MAP correction is
-    significantly more noisy than the CBV one, particularly in the top
-    three cases. Note also the overcorrection of the intrinsic
-    variability in the bottom case}
+    to separate the different curves. While both corrections are almost identical in the two two cases, the PDC-MAP correction is
+    significantly more noisy and over-corrects the intrinsic
+    variability in the bottom two cases.}
   \label{fig:ex_pdc}
 \end{figure*}
 
@@ -179,12 +174,10 @@ basis from the light curves.
 
 \begin{figure*}
   \centering
-  \includegraphics[width=0.49\linewidth]{fig2a.png} \hfill
-  \includegraphics[width=0.49\linewidth]{fig2b.png}
+  \includegraphics[width=\linewidth]{arc2_stats_q3.png} 
   \caption{Statistical comparision of the SAP, PDC-MAP and CBV light
-    curves for Q3. The left column shows the short-term scatter, $\sigma$ and
-    the right hand column shows the range, $R$ (see text for
-    definitions). In all cases, the x-axis shows a magnitude-like
+    curves for Q3. The left, middle and right columns show the short-term scatter, range and 6.5-h CDPP proxy, respectively, while the top, middle and bottom rows show the ratio of these quantities between PDC and SAP, CBV and SAP, and PDC and CBV light curves, respectively. 
+    In all cases, the x-axis shows a magnitude-like
     quantity based on the median flux in each light curve. The
     different colours correspond to different modouts (see legend in
     middle left panel). The detailed behaviour of the different modouts is discussed
@@ -195,7 +188,7 @@ basis from the light curves.
 The PDC pipeline broadly follows this paradigm. In its original
 version \citep{twi+10a,twi+10b}, known as PDC-LS (for least squares),
 the basis was constructed from ancillary engineering data and the
-coefficient realting each systematic trend (each term in the basis) to
+coefficient relating each systematic trend (each term in the basis) to
 each light curve were derived by least-squares (or maximum likelihood)
 fitting. However, this method suffered from two problems: overfitting
 (removal of real astrophysical variability) and injection of noise
@@ -218,61 +211,37 @@ according to stellar magnitude and position on the sky, and the final
 coefficients are found by maximising the marginal likelihood for each
 star, subject to these priors.
 
-The PDC-MAP performs significantly better than the PDC-LS, and it is
-less susceptible to overfitting and noise injection, althougth these
+The PDC-MAP pipeline performs significantly better than the PDC-LS one, and it is
+less susceptible to over-fitting and noise injection, although these
 effects do remain apparent in some of the light
-curves. Figure~\ref{fig:ex_pdc_bad} shows a few representative
-examples where the PDC-MAP pipeline clearly introduces noise and/or
-overcorrects astrophysical variability.  This is also illustrated in a
-statistical manner in the top row of Figure~\ref{fig:sig_ran_comp},
-which illustrates the change in the white noise level and light curve
-amplitude before and after correction by the PDC-MAP pipeline. We
-measure the white noise level $\sigma$ as the standard deviation of
-the first difference of each light curve (throughout this paper, all
-light curves are assumed to be normalised by dividing them by the
-median flux value). Using the first difference ensures that any
-long-term trends are taken out of the equation. The PDC-MAP leaves
-$\sigma$ unchanged in most cases and can even reduces it in certain
-modouts, but there is always a significant number of cases where
-$\sigma_{\rm PDC} \gg \sigma_{\rm SAP}$, i.e. PDC-MAP has injected
-significant amounts of noise into the light curve. 
+curves. To address the small number of cases where the PDC-MAP pipeline performance was not entirely satisfactory, a third version, known as PDC-msMAP (``ms" stands for ``multi-scale"), was developed by \citet{stu+14}. This version uses a wavelet transform to split the light curves into three channels, or bands, which are processed separately, resulting in a more effective separation of intrinsic and common-mode
+signals, and improved removal of the systematics. The final version of the \emph{Kepler} data, now available at MAST, uses the PDC-msMAP pipeline, and will be used for comparison throughout this paper, though for the sake of brevity, we hereafter refer to the PDC-msMAP pipeline and data using the shorthand 'PDC'.
 
-We use the range $R$, first introduced by \citet{bas+10a,bas+10b}, to
-describe the light curve amplitude. $R$ is defined as the interval
+
+Figure~\ref{fig:ex_pdc} shows a few representative
+examples of SAP light curves from Q3 (in grey), together with the correction applied by the PDC pipeline, and the resulting PDC light curve (in cyan). The top two rows show a relatively quiet star and a short time-scale ($<5$\,d) variable, respectively. In those cases the PDC pipeline performs as well as one could expect. The bottom two rows show two longer time-scale ($>5$\,d) variables. Those illustrate the limitations of even the latest version of the PDC pipeline: the correction is somewhat noisy, and removes some real, astrophysical variability as well as systematics. One of the design considerations for our own pipeline was to try to reduce the incidence of these problems even further, without sacrificing the otherwise excellent overall performance.
+
+This overall performance of both the PDC and our own pipeline are illustrated in a statistical manner in the top panel of Figure~\ref{fig:sig_ran_comp}. This figure shows various estimates of the light curve scatter on different timescales as a function magnitude, in the form of ratios between the PDC, SAP and our own correction, for 4 representative channels in Q3. The left-hand column shows the point-to-point (p2p) scatter $\sigma$, measured as the standard deviation of
+the first difference of each light curve. Using the first difference ensures that any
+long-term trends are taken out of the equation, giving an estimate of the high-frequency noise level alone. The middle the range $R$, first introduced by \citet{bas+10a,bas+10b} as a relatively noise-independent measure of light curve amplitude, and defined as the interval
 between the $5^{\rm th}$ and the $95^{\rm th}$ percentiles of the
-normalised flux values. It captures variations on a wide range of
+normalised\footnote{Throughout this paper, all
+light curves are assumed to be normalised by dividing them by the
+median flux value.} flux values. $R$ captures variations on a wide range of
 time-scales, including both systematics and intrinsic
-variability. Most light curves are initially systematics-dominated, so
-the PDC-MAP correction should -- and does -- reduce $R$ signifciantly
-in most cases. However, the PDC-MAP correction \emph{increases} $R$
-for a few bright stars in each modout (Figure~\ref{fig:sig_ran_comp},
-top-right panel). This behaviour is not what would be expected if the
-correction was actually removing systematics. 
+variability. Finally, the right-hand column shows the 6.5-h combined differential photometric precision (CDPP)\footnote{Throughout this paper we use our own proxy estimate of the CDPP, as defined in \citep{aig+16}. The true CDPP is estimated by the \emph{Kepler} transit search pipeline and published together with the PDC light curves, but we have chosen to compute our own proxy for it so that it can be compared directly to the same quantity for the light curves processed with our own pipeline.} which is widely used to evaluate the noise level on transit timescales. 
 
-In addition to the general issues already mentioned, some quarters remain
-particularly problematic. [ illusrate this with a
-plot of a full light curve, over Q0-Q17, showing bad quarters]
+At the time this work was initiated, the PDC-msMAP results were not yet available for most quarters, and it was noticeable that the PDC-MAP pipeline introduced significant amounts of high-frequency noise in a relativley large fraction of the light curves. The top-left panel of Fig.~\ref{fig:sig_ran_comp} shows that this problem has been significantly reduced in the PDC-msMAP pipeline. On average, the latter leaves
+$\sigma$ unchanged, and even reduces it in certain
+channels, with only a few individual exceptions. As most light curves are initially systematics-dominated, so
+the PDC correction should -- and does -- reduce $R$ significantly
+in most cases, as illustrated in the top-middle panel, but it is hard to tell whether any of the reduction in $R$ results from the removal of real variability. Finally the top-right panel shows that the 6.5~h CDPP is more or less unaffected on average, and even reduced slightly in some channels, but it is interesting to note that it is significantly increased (by 10\% or more) for a non-negligible fraction of the cases (about 10\% for these 4 particular channels in Q3). 
 
-The most recent data releases employ yet another PDC version,
-PDC-msMAP (for multi-scale MAP, \citealt{stu+12b}), where a
-band-splitting process is used to separate long, medium and short-term
-effects, which are treated in different ways. Long-term effects are
-removed using least-squares (PDC-LS), which results in the
-near-complete removal of all variability, whether systematic or real,
-on timescales longer than 20 days. Medium-term effects are treated
-using the PDC-MAP approach, and short-term effects are not removed at
-all. The motivation for this is to minimise the disruption of transit
-signals by the PDC pipeline, but the side effect is that PDC-msMAP
-data are unsuitable for variability studies. On the other hand, the
-PDC-MAP CBVs (without band-splitting) continue to be made available
-together with the SAP and PDC-msMAP light curves.
+\subsection{An open-source systematics removal pipeline matching the PDC performance}
 
-\subsection{Alternative systematics removal methods}
+As explained above, we seek to develop an alternative systematics-correction pipeline for \emph{Kepler}, which comes as close as possible to mathcing the excellent performance of the PDC pipeline, but for which the code and the input data are all publicly available, to enable independent estimates of the impact of this pipeline on different kinds of astrophysical signals of interest. Furthermore, it would be desirable to reduce the extent to which longer-term astrophysical variability is affected, and further minimise the injection of short-term noise into the corrected light curves.
 
-[Flesh out this section later -- mention methods using the target pixel
-files, and also the methods used in the KASC]. 
-
-In \citet[][hereafter Paper I]{rob+13}, we presented a new method to
+In \citet[][hereafter Paper I]{rob+13}, we presented an alternative method to
 identify and correct common-mode systematics (trends present, to a
 greater or lesser extent, in the majority of light curves), which we
 called the ARC (Astrophysically Robust Correction) method, as it was
@@ -280,120 +249,70 @@ specifically designed to minimize the risk of removing or altering
 astrophysical variability along with the instrumental
 systematics. Like the PDC, the ARC is based on decomposing each light
 curve into a linear superposition of systematic trends, plus a unique
-vector representing intrinsic variability and random noise, and like
-in PDC-MAP the systematic trends are identified from the light curves
-themselves, for each output channel. The main differences are a) that
-the ARC uses an information entropy criterion to identify and retain
-only candidate trends that are genuinely systematic, i.e. composed of
-small contributions from many light curves b) that the trends are
-smoothed before they are corrected, to minimise the risk of
-injecting noise into the corrected light curves, and c) that adaptive,
-zero-mean (shrinkage) priors were used to evaluate coefficients
-linking each systematic trend to each light curve. The ARC uses a
-variational inference framework to carry out Bayesian inference under the linear basis
-model (see the Appendix of paper I for full details), which is
-extremely fast: once the basis vectors have been identified,
-correcting all the light curves takes only some 10 CPU minutes per quarter.
+vector representing intrinsic variability and random noise. Like
+in the PDC-MAP and msMAP versions, the systematic trends are identified from the light curves
+themselves, for each output channel, although the procedure for doing so is slightly different (the ARC uses an information entropy criterion to identify genuinely systematic trends). Once identified, the trends are
+smoothed before they are applied to the individual light curve. Finally, adaptive,
+zero-mean (shrinkage) priors were used to evaluate the coefficients
+linking each systematic trend to each light curve, in an effort to reduce the risk of over-fitting. 
 
-The trend smoothing and the use of shrinkage priors mean that the ARC should be
-even less prone to overfitting and noise injection than the PDC-MAP,
-which is indeed what we found when comparing the two methods on
-quarter 1 (Q1) data. However, before the ARC can be applied to later
-quarters, the smoothing step must be revisited: in Paper 1, we used a
-method called empirical mode decomposition (EMD, [ref]) to decompose
-each trend into what are essentially distinct oscillatory modes with
-different numbers of turning points, and retained only the mode with
-the largest variance. Later quarters contain discontinuities and sharp
-decays following each $\sim$ monthly data downlink event, which cannot
-be captured adequately with EMD. We did investigate -- and are still
-looking into -- alternative smoothing methods, in particular
-modelling each trend with a Gaussian process (GP). If desired, the GP
-model can be tuned to reflect any a priori knowledge on the
-characteristics of the systematic effects which are expected to be
-present (such as time-scale, quasi-periodic nature,
-etc.). However, so far we did not converge on a completely
-satisfactory trend-smoothing procedure.
-
-On the other hand, we noted that the first few systematic trends
-identified by the ARC (before de-noising) and the CBV tend to be
-mutually quite similar, so that any differences in performance are
-more likely to result from the trend smoothing and coefficient fitting
-parts of the process than from the trend identification
-process. Furthermore, both the first few ARC trends and the first few
-PDC-MAP CBVs contain some high-frequency structure which appears to be
+Since Paper I, which included tests on Q1 data only, we have applied the ARC to later quarters, and it has become apparent that ARC trend identification method results in basis vectors that are usually extremely similar to the CBVs. We thus concluded that it may be more expedient to use the published CBVs than to derive our own (specially as the trend identification is by far the most CPU intensive part of the ARC pipeline). Using the same basis vectors as the PDC also maximises the chances that the light curves corrected with our pipeline are as similar as possible to the PDC version, whenever that is desirable. 
+Furthermore, the smoothing method used in Paper I (empirical mode decomposition, \citealt{hua98}), cannot adequately reproduce the discontinuities and sharp decays that affect essentially all light curves, following each $\sim$ monthly data down-link event. On the other hand, we noted that both the first few CBVs, and the raw ARC basis vectors, contain some high-frequency structure, which appears to be
 real, in the sense that it is also present in the light curves of
-bright stars (where the photon noise does not mask these effects).
-This is visible in the top left panel of Figure~\ref{fig:comp_sig_ran}
-for modout 17.2 (yellow symbols). The PDC-MAP actually reduces the
-white noise in most light curves, particularly those in the middle of
-the magnitude range. In other words, not all of the short-term
-variation in the CBVs is noise, which suggests that smoothing the
-trends may not be optimal.
+bright stars (where the photon noise does not mask these effects). This implies that smoothing the basis vectors may not be a good idea after all.
 
-On the other hand, we have also seen that the PDC-MAP \emph{increases}
-the white noise and appears to remove astrophysical
-variability\footnote{This is a subjective statement, since we do not
-  know which components of the variability in a given light curve are
-  actually real, and which are systematic, but after visually
-  examining many hundreds of Kepler light curves, one begins to build
-  up a fairly robust prior on what kind of variations are systematic
-  and what kind are not.} for a small but significant fraction of the
-light curves. As we have shown in Paper 1, this problem is less
-prominent for the ARC because of the use of adaptive, shrinkage
-priors. This suggests a potentially `quick and easy' way to improve
-the correction of systematic trends in Kepler data using existing
-resources: by using the existing PDC-MAP CBVs, but the ARC shrinkage
-prior approach. This is the subject of the present paper. 
+This leaves us with the trend removal section of the ARC, which is essentially an alternative to the MAP portion of the PDC-MAP process. Both pipelines use priors over the coefficients relating each basis vector to each light curve, but instead of constructing those by parametrising the distribution of these coefficients as a function of (e.g.) a star's magnitude and location on the detector, the ARC approach consists in starting with a zero-mean Gaussian prior over each coefficient, and applying a Gamma hyper-prior on the width of that Gaussian. Unless there is particularly strong support in the data for a particular basis vector, the prior for the corresponding coefficient will rapidly shrink to zero (hence the name "shrinkage prior"). This is intended to minimise the risk of over-fitting, which leads to the noise-injection and variability suppression problems we noted in some PDC light curves. This trend removal procedure is implemented in a
+variational inference framework (see the Appendix of paper I for full details), which is
+extremely fast: given a set of basis vectors,
+correcting a given light curve for a give quarter takes of order a second, and all the light curves (for all channels) less than half an hour on our 96-core linux cluster. 
 
-An
-additional motivation for developing an independent correction method
-based on the PDC-MAP CBVs is that it enables us to quantify the effect of
-the correction on stellar signals using injection tests (where
-simulated signals are injected into the light curve before correction
-and our ability to recover and characterise them after correction is
-evaluated). We cannot do this for the PDC-MAP correction itself, as we
-do not have access to the pipeline, only the data products.
-
-\smallskip
-
-The paper is structured as follows. In Section~\ref{sec:jumps} we
-describe and test a method for identifying and correcting isolated
-discontinuities in individual light curves. The correction of these
-so-called sudden pixel sensitivity dropouts (SPSDs) is done as part of
-the PDC, but the published data products do not provide enough
+The rest of this paper is structured as follows. In Section~\ref{sec:jumps} we
+describe and test a method for identifying and correcting isolated jumps, or 
+discontinuities, in individual light curves. Most \emph{Kepler} light curves contain a few of these, and they are identified and corrected as part of
+the PDC pipeline, but the published data products do not provide enough
 information to separate this from the systematic trend correction, so
-it was necessary for us to develop our own SPSD correction. In
-Section~\ref{sec:cbv} we describe our method for applying the PDC-MAP
+it was necessary for us to develop our own jump correction. In
+Section~\ref{sec:cbv} we describe our method for applying the
 CBVs to the light curves, which we call the CBV correction (to
-distinguish it from the PDC-MAP correction). In particular we present a simple way of
+distinguish it from the PDC). In particular we present a simple way of
 deciding, for each light curve, how many CBVs should be used in the
 correction. This Section also includes links to the corrected data and
 the code used to produce them. In Section~\ref{sec:tests} we evaluate the performance of
-our method using injection tests, and compare it to the PDC-MAP
-method. [I may or may not add an additional section illustrating some
-potential applications]. We discuss the potential applications of this
-correctoin and summarise our conclusions in Section~\ref{sec:concl}.
+our method using injection tests, and compare it to the PDC
+method. We discuss the potential applications of the new CBV pipeline and summarise our conclusions in Section~\ref{sec:concl}.
 
 \section{Detection and correction of individual discontinuities}
 \label{sec:jumps}
 
-The SPSD correction is roughly divided into three phases: the detection
-of possible discontinuities, the identification of the found discontinuity 
-candidates, and finally the correction of candidates identified as real
-discontinuities.
-
+The SPSD correction is divided into: a) detection, b) classification, and c) correction of discontinuities. The detection phase identifies discontinuities in the light curve, the classification phase identifies the type of the discontinuity (SPSD, flare, or transit), and the correction phase corrects the SPSDs but leaves flares and transits untouched.
 
 % Step 1: Identification
 % ----------------------
-The SPSD candidate identification is carried out by first denoising the 
-light curve in a way that aims to smooth the short time-scale scatter
-while keeping discontinuities intact. We do this by modelling the flux 
-as a Gaussian Process with an exponential kernel, and use the mean of the GP 
-predictive distribution to represent the denoised light curve. Next, we
-calculate the derivative of the light curve and identify the cadences where the
-absolute slope deviates significantly from the slope distribution of the entire
-denoised light curve as SPSD candidates. These steps are illustrated in 
-Fig.~\ref{fig:jumps_identification}.
+The discontinuity detection is carried out by modelling the light curve, $\mathbf{f}$, as 
+a zero-centered Gaussian Process (GP) with a covariance matrix $\mathbf{K}$, that is
+\begin{equation}
+    \mathbf{f} \sim \mathcal{N}(0, \mathbf{K}).
+\end{equation}
+The covariance matrix elements are defined by a covariance function (kernel) with the light curve cadences $\mathbf{c}$ as the input parameter
+\begin{equation}
+    \mathbf{K_{ij}} = a^2 \exp\left(-\frac{|c_i - c_j|}{\lambda}\right) \times B(\beta, c_i, c_j) + \sigma^2 \delta_{ij},
+\end{equation}
+where the first term is a product of an exponential kernel with an output scale $a$ and input scale $\lambda$, and of a breakpoint function 
+%\begin{equation*}
+%    B(\beta, c_i, c_j) = \begin{cases}
+%    1 &\text{if $c_i$ and $c_j$ are on the same side of $\beta$}\\
+%    0 &\text{else}
+%    \end{cases}
+%\end{equation*}
+\begin{equation*}
+    B(\beta, c_i, c_j) = \begin{cases}
+    1 &\text{if } \left( c_i \leq \beta \land c_j \leq \beta\right) \lor (c_i \geq \beta \land c_j \geq \beta)\\
+    0 &\text{else}
+    \end{cases}
+\end{equation*}
+that forces the covariances between the points on the different sides of a given breakpoint cadence, $\beta$, to zero, and the second term represents average white noise.
+
+The discontinuity detection begins by applying a narrow running median filter to the light curve to remove individual outlier points, and then by dividing the cleaned light curve into locally normalized, zero-centered, chunks of $n_p$ datapoints (where $n \sim 150$ to reduce the computational burden of the covariance matrix inversion). Next, we learn the GP hyperparameters $a$, $\lambda$, and $\sigma$ from the data assuming no breakpoints are present. This is done by maximising the sum of the likelihoods from a set of randomly selected chunks as a function of the hyperparameters. Next, for each cadence in  each  chunk, we keep the hyperparameters fixed and calculate the likelihoods for $c_b$ equalling the cadence. Discontinuities are now identified as positive outliers from the likelihood time series, as illustrated  in Fig.~\ref{fig:jump_identification}.
 
 
 % Step 2: classification
@@ -402,50 +321,36 @@ The Kepler light curves contain several types of signals that can cause rapid
 changes in the flux. Besides the instrumental SPSDs that we want to find and correct, 
 we also have astrophysical signals---such as planetary transits, binary eclipses, and stellar 
 flares---that we do not want to remove. Thus, an automated SPSD correction routine
-needs a way to identify an SPSD from these other discontinuities. We use a 
-Bayesian information criterion (BIC)-based model selection approach for the
-SPSD candidate classification. The method fits four different models to each SPSD candidate
-(false alarm, transit-like, flare, or SPSD), modelling the flux baseline with a
-Gaussian Process, and classifies the SPSD candidate based on the model BIC-values.
+needs a way to identify an SPSD from these other discontinuities. The discontinuity classification uses a 
+Bayesian information criterion (BIC)-based model selection approach to select between a set of possible discontinuity models. The current code implements five models: a) false alarm modeled by a low-order polynomial, b) transit-like, c) flare, d) SPSD, and e) SPSD followed by an exponential drift to a new level. The discontinuity classification phase fits the models to each discontinuity, modelling the flux baseline either with a low-order polynomial or a
+Gaussian Process, and selects the model with the lowest BIC value as the true model, as shown in Fig.~\ref{fig:jump_classification}.
 
 % Step 3: Correction
 % ------------------
-Finally, we correct the identified SPSDs based on the fitted discontinuity model and
-save the information about the identified discontinuities for later use. The results
-for an example light curve with several injected SPSD and transit signals are shown 
-in Figs.~\ref{fig:jumps_classification} and \ref{fig:jumps_classification_closeup}.
+Finally, in phase c), we correct the identified SPSDs based on the fitted discontinuity model and
+save the information about the identified discontinuities for later use. 
+%The results
+%for an example light curve with several injected SPSD and transit %signals are shown 
+%in Figs.~\ref{fig:discontinuity_classification} and \ref{fig:jumps_classification_closeup}.
 
 \begin{figure}
  \centering
- \includegraphics[width=\columnwidth]{jumps_identification.pdf}
- \caption{An example illustrating the basic steps for the SPSD candidate search: 
-  and artificial light curve containing long-period variability, white noise,
-  correlated noise, outliers, and an SPSD signal (a),
-  the denoised light curve (b), and the absolute slopes of the denoised light
-  curve (c) with the 1--6 standard deviations of the absolute slope distribution 
-  marked as horizontal lines.}
- \label{fig:jumps_identification}
+ \includegraphics[width=\columnwidth]{pub_jump_identification.pdf}
+ \caption{An example illustrating the discontinuity search: 
+  a light curve containing long-period variability, white noise,
+  correlated noise, outliers, and two SPSD signals (top),
+  and the GP log likelihood for the GP kernel with a breakpoint and the 10--80 MAD (median absolute deviation) levels for the log likelihood distribution 
+  marked as horizontal slashed lines (bottom).}
+ \label{fig:jump_identification}
 \end{figure}
 
 \begin{figure*}
  \centering
- \includegraphics[width=\textwidth]{jumps_classification.pdf}
- \caption{The results of the SPSD search for a single light curve. The identified SPSDs
-  are marked with dashed vertical lines, the identified transits as wide dashes, and the
-  identified false-alarms as dotted lines. One transit-like feature has been mistakingly
-  identified as a false-alarm, and the search method has been told to ignore the single 
-  high-amplitude SPSD.}
- \label{fig:jumps_classification}
+ \includegraphics[width=\textwidth]{discontinuity_classification.pdf}
+ \caption{Discontinuity classification. Each row shows a light curve with a discontinuity (blue dots), and each column shows a discontinuity model fitted to the light curve (black line) with the model's BIC value relative to the lowest BIC value of the fitted models. The model with the lowest BIC value (thick black line) is chosen to represent the discontinuity type. The infinite $\Delta$ BIC values arise when the priors for the model parameters reject the model directly, such as with flares with negative amplitude.}
+ \label{fig:jump_classification}
 \end{figure*}
 
-\begin{figure}
- \centering
- \includegraphics[width=\columnwidth]{jumps_classification_b.pdf}
- \caption{Closeup of the model-selection process for two of the jump candidates identified
-   from Fig.~\ref{fig:jumps_classification}. The rejected models are shown with dashed
-   grey lines and the chosen model as a solid line.}
- \label{fig:jumps_classification_closeup}
-\end{figure}
 
 \section{Optimized use of the CBVs}
 \label{sec:cbv}
@@ -481,7 +386,7 @@ p(\mathbf{F}|\mathbf{w},\mathbf{C}) =
 a free parameter then the full likelihood expression must be used.)
 
 Maximum likelihood linear basis models are notoriously prone
-to overfitting. Better results can be obtained in a Bayesian
+to over-fitting. Better results can be obtained in a Bayesian
 framework, by using
 priors over the $w$'s to encapsulate any external information
 available over the expected values for the weights, and maximise the
@@ -492,7 +397,7 @@ p(\mathbf{w}|\mathbf{F},\mathbf{C}) =
   p(\mathbf{F}|\mathbf{w},\mathbf{C}) \, p(\mathbf{w}) \, {\rm d}\mathbf{w}},
 \end{equation} 
 where the normalisation constant in the denominator is the model
-evidence $p(\mathbf{F}|\mathbf{C})$. In the PDC-MAP, the priors over
+evidence $p(\mathbf{F}|\mathbf{C})$. In the PDC-MAP pipeline, the priors over
 the $w$'s are based on the distribution of the coefficients derived in
 the maximum likelihood case (i.e.\ in the absence of priors),
 parametrised as a function of star position and magnitude. This
@@ -503,9 +408,9 @@ which had been noted in PDC-LS, but does not entirely do away with
 them. One plausible explanation for this is that the PDC-MAP priors
 themselves are affected by overfitting in the initial, maximum
 likelihood step. Furthermore, a fixed prior, as in the MAP model,
-does not guarantee model shrinkage as required to avoid overfitting. 
+does not guarantee model shrinkage as required to avoid over-fitting. 
 
-To reduce the risk of overfitting further, we regularise the model using priors
+To reduce the risk of over-fitting further, we regularise the model using priors
 which specifically penalise larger weights, and make it less likely
 that one basis vector will compensate for another. A natural choice
 for this is to use zero-mean Gaussian priors:
@@ -561,9 +466,7 @@ the model is guaranteed to improve each iteration, thus providing robust
 convergence which typically occurs after just a few 
 iterations. The computational requirement scales as $JK^2$, where $J$
 is the number of observations and $K$ is the number of basis
-vectors. Our {\sc Matlab} batch implementation of the method runs in
-$< 3$ minutes (on a quad-core i7 CPU) per output channel ($1500$--$2000$
-stars) and per quarter ($\sim 4300$ observations) for up to 8 CBVs. 
+vectors. Our {\sc Python} implementation of the method runs in less a fraction of a second per light curve per quarter ($\sim 4300$ observations) for up to 8 CBVs. 
 
 \subsection{How many CBVs?}
 
@@ -579,24 +482,23 @@ stars) and per quarter ($\sim 4300$ observations) for up to 8 CBVs.
     comparison. The right panel shows the corrected light curves,
     using the same colour-coding. In both panels, the different light
     curve versions have been offset by an arbitrary amount, for
-    clarity. [Will find better, more illustrative examples when I get
-    the chance]}
+    clarity.}
   \label{fig:ncbv_ex}
 \end{figure*}
 
 Despite the measures described in the previous section to minimise the
-risk of overfitting, the results still depend, in some cases, on the number of basis vectors
-used. The PDC-MAP CBVs result from a singular value decomposition of a
+risk of over-fitting, the results still depend, in some cases, on the number of basis vectors
+used. The CBVs result from a singular value decomposition of a
 subset of the light curves, and therefore the first CBV represents a
 larger fraction of the overall variance of the light curves, and so
-on... The PDC-MAP pipeline saves 16 CBVs but only uses at most 8 to
+on. The PDC pipeline saves 16 CBVs but only uses at most 8 to
 perform the correction. Additionally, a signal-to-noise ratio (SNR)
 criterion is used to exclude CBVs which are deemed to contribute more
 noise than useful information (see \citealt{smi+12} for details), so
 the actual number of CBVs used ranges from 5 to 8. 
 
-As the VB method is very fast, it is feasible to run it for every possible
-number of CBVs, $K$ (from 1 to 16). We first did this for a few
+As the VB method is very fast, it is feasible to run it for every plausible
+number of CBVs, $K$ (from 1 to 8). We first did this for a few
 representative quarters (3 to 6) and output
 channels, and performed a visual comparison of the results on a random
 selection of light curves. 
@@ -606,7 +508,7 @@ applied and the corrected light curve, for a few tens of stars
 selected at random in each modout. A few examples are shown in
 Figure~\ref{fig:ncbv_ex}. In most cases, the overall
 shape of the correction is fairly insensitive to the number of CBVs
-used, so long as it is at least than 2 or 3. On the other hand, as the
+used, so long as it is at least 2 or 3. On the other hand, as the
 CBVs are increasingly noisy, using more CBVs introduces more noise
 into the light curves particularly for the brighter stars. It is
 therefore important to use the smallest number of CBVs which gives an
@@ -616,6 +518,13 @@ including the $4^{\rm th}$ and $5^{\rm th}$ CBVs removes features
 which appear systematic in nature, and which were not removed when
 using only the first two. In other cases, even using the $2^{\rm nd}$ CBV
 appears to have a detrimental effect.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{arc2_ncbv_q3.pdf}
+  \caption{Distribution of the number of CBVs used for the 4 channels from Q3 shown in Figure~\ref{fig:sig_ran_comp} (same colour-coding).}
+  \label{fig:ncbv}
+\end{figure}
 
 Rather than specifying an overall value for $K$ for, say, each
 quarter and modout, we therefore decided to select the optimal number
@@ -628,7 +537,7 @@ initially dominated by systematics, the dependence of $R$ on $K$
 tracks the extent to which the correction of systematics is improved
 by adding more CBVs. Typically, $R$ decreases rapidly for low $K$ but
 then reaches a plateau for larger $K$. Within this plateau regime, increasing
-$K$ beyond does not usually improve the correction
+$K$ further does not usually improve the correction
 significantly but it does introduce more noise, so one might simply
 opt for the lowest value of $R$ at which the plateau is
 reached. We initially define $K_{\rm opt}$ as the smallest value of $K$ for which $R(K)
@@ -645,7 +554,7 @@ variable stars. One way of testing for this would be to inject
 realistic simulated variability signals into the light curve before
 correction, and check how well they are recovered
 post-correction. However, doing this for every light curve would be
-prohibitively expensive. We do use such injection tests can be used to
+prohibitively expensive. We do use such injection tests to
 evaluate the overall ability of our correction method to preserve
 astrophysical signals, but only on a subset of the data (see
 Section~\ref{sec:inject}).
@@ -662,21 +571,11 @@ until the scatter ratio falls below the 1.1 threshold. The choice of
 threshold is somewhat arbitrary, but its exact value is not
 critical: when it is exceeded it is usually by a fairly wide margin.
 
-[include a figure illustrating the selection of $K_{\rm opt}$ for a
-straight-forward case, and one where the $\sigma$ threshold had to be
-used.]
+Figure~\ref{fig:ncbv} shows histograms of the number of CBVs used for the 4 representative output channels from Q3 which featured in Figure~\ref{fig:sig_ran_comp}. Note that the number of CBVs used is never less than 1 or more than 4, and is fairly evenly distributed between those two values, but the distribution does vary noticeable from one channel to the next -- as do the CBVs themselves.
 
-Having defined a method for selecting $K_{\rm opt}$, we processed
-all the Kepler data publicly available at the time of writing,
-i.e. quarters 0 to 17. The resulting corrected light curves are
-publicly available at [include URL], along with the code used to
-produce them. There are two versions of the code: a batch version,
-written in {\sc Matlab}, which processes entire modouts, and a
-single-light curve version, written in {\sc Python}, which works
-directly on the FITS light curve and CBV files produced by the Kepler
-pipeline. In the next Section, we test the performance of the CBV
-correction using injection tests, and compare it to the PDC-MAP
-results.
+\subsection{Publicly available code}
+The code is divided into two GPL-licenced freely available Python packages: \textsc{KeplerJC}\footnote{Available from \url{https://github.com/hpparvi/KeplerJC}.} that carries out the discontinuity detection and classification, and \textsc{CBVShrink}\footnote{Available from \url{https://github.com/saigrain/CBVshrink}.} that carries out the light curve detrending. The packages can be installed using standard Python package procedures, and will in the future be made easily available using \textsc{pip}.
+
 
 \section{Performance tests}
 \label{sec:tests}
@@ -695,13 +594,13 @@ results.
   \label{fig:inject_ex}
 \end{figure*}
 
-The method we use to select the number of CBVs used, as described in
+Our prescription for selecting the number of CBVs used, as described in
 the previous Section, is intended to remove systematics as effectively
 as possible while minimizing the risk of
-overfitting, i.e. removing astrophyiscal variability, and of
+over-fitting, i.e. removing astrophysical variability, and of
 introducing extra noise into the light curves due to the noisy nature
 of the CBVs themselves. To test the extent to which our systematics
-removal method affects stellar variabiltiy, we now perform a series of
+removal method affects stellar variability, we now perform a series of
 injection tests. Specifically, we are interested in variability caused
 by rotational modulation of surface inhomogeneities such as
 star-spots, since this is a powerful diagnostic of stellar rotation
@@ -727,16 +626,15 @@ We simulate rotation-like signals, consisting of between 1 and 5 co-added
 sinusoidal variations, with periods randomly drawn from a log uniform
 distribution ranging from 5 to 60 days, and amplitudes drawn from a
 log normal distribution with mean $10^{-3}$ and standard deviation 0.5
-dex. These were added to 200 randomly select light curves in each
-modout, which were then corrected for systematics as described in the
+dex. These were added to 200 randomly selected light curves in each channel and quarter, which were then corrected for systematics as described in the
 previous section. The difference between the corrected light curves
 with and without injected signal, hereafter referred to as the
 \emph{recovered} signal, is then compared to the injected
 signal itself: any discrepancies arise because the correction is affecting
-the injected signal. Figure~\ref{inject:ex} illustrates this process
+the injected signal. Figure~\ref{fig:inject_ex} illustrates this process
 for a few example light curves. Of course, the light curves into which the
 simulated signals are injected already contain astrophysical
-variability, which themselves may have been affected by the
+variability, which itself may have been affected by the
 correction, and this may contribute to the differences between the
 injected and recovered signals. However, we opted for this approach
 rather than attempting to generate light curves with simulated stellar
@@ -747,13 +645,13 @@ We quantify the effect of the correction on the simulated signals by
 measuring the Pearson correlation coefficient $P$ between the injected
 and recovered signal, and by comparing the range $R$, scatter $\sigma$
 (as defined earlier) and frequency $F$ of the injected and recovered
-signals. The results are shown for a representative modout in
-Figure~\ref{inject:stat}. $F$ was measured by simple least squares
+signals. The results are shown for a representative channel and quarter in
+Figure~\ref{fig:inject_stat}. $F$ was measured by simple least squares
 fitting of a sinusoid over a grid of equally spaced trial
 frequencies. These plots show that the injected signals are remarkably
 well preserved: $P$ is $>0.9$ and the error in $R$ is $<500$\,ppm 83\%
-of the time, white the added scatter is $<100$\,ppm and the relative
-frequency error $<0.05$ 92\% of the time. These plots shown are for
+of the time, while the added scatter is $<100$\,ppm and the relative
+frequency error $<0.05$ 92\% of the time. The plots shown are for
 modout 17.2 in Q3, but the same tests were performed for all 4 of the
 test modouts in Q3--Q6 inclusive, and gave similar results. We also
 checked for any correlation between the metrics discussed above and the
@@ -764,57 +662,33 @@ but did not find any significant trends.
 \subsection{Comparison to PDC-MAP}
 \label{sec:comp}
 
-Figures~\ref{fig:ex_pdc} and \ref{fig:sig_ran_comp} show a comparison
-of the PDC-MAP and CBV corrections using illustrative examples and
-quantitative statistics, respectively. The most important feature, in
-both cases, is that the corrected light curves and associated
-statistics are generally similar. This is not altogether surprising,
+Figures~\ref{fig:ex_pdc} and \ref{fig:sig_ran_comp} were introduced in Section~\ref{sec:pdc} when discussing the PDC pipeline. We now return to them for the purposes of comparing the latter to our new CBV pipeline. The most important remark, whether comparing individual examples as in Figure~\ref{fig:ex_pdc}, or statistics over a large ensemble of light curves, as in Figure~\ref{fig:sig_ran_comp}, is how similar the PDC and CBV corrections are. This is not altogether surprising,
 since both corrections are based on the same set of basis vectors, but
 it is reassuring: it indicates that the different choices of priors do
-not usually have too strong an effect on the results. Nonetheless, for
-a subset of the cases, the PDC-MAP correction is significantly more
-noisy than the CBV one, as illustrated by the left panel panel of
-Figure~\ref{fig:ex_pdc} (particularly rows 1, 2 and 4) and the bottom
-left panel of Figure~\ref{fig:sig_ran_comp}. The number of cases where
-the scatter is significantly increased after correction is also
-significantly lower in the CBV case than in the PDC-MAP one. In
-quantitative terms, the median value of $\sigma_{\rm PDC}/\sigma_{\rm
-  CBV}$ was 1.004 for the 4 modouts considered in Q3, but the number of
-cases where $\sigma_{\rm PDC}>1.1 \sigma_{\rm CBV}$ was 115 (out of
-7935), whereas the number of cases where $\sigma_{\rm PDC}<0.9
-\sigma_{\rm CBV}$ was only 19.
+not usually have too strong an effect on the results. It also means that we have succeeded in one of our initial aims, namely to match the overall performance of the PDC pipeline. 
 
-As an aside, we note that comparing $\sigma$ before and after
+Both correction do a good job of preserving, or even reducing, the high frequency noise level. However, for
+a subset of the stars, the PDC correction a) reduces the range $R$ significantly more, and b) injects significantly more
+noise on transit timescales, than the CBV one, as illustrated by the bottom two rows of Figure~\ref{fig:ex_pdc}, and by the middle and right panels of the bottom row of Figure~\ref{fig:sig_ran_comp}. In
+quantitative terms, for the 4 test channels in Q3, the median value of $R_{\rm PDC}/R_{\rm CBV}$ was 0.92, and the PDC pipeline increased the 6.5-h CDPP by $>1.1$ in 5.6\% of the stars, compared to only 0.3\% of the stars for the CBV pipeline.
+
+\textcolor{red}{Check if this is still true and edit accordingly}. As an aside, we note that comparing $\sigma$ and the 6.5-h CDPP before and after
 correction can be used as a useful diagnostic of problematic light
 curves: when the CBV correction increases $\sigma$ by
 more than 10\%, visual examination of the light curves often reveals
 abnormal behaviour, apparently associated with image artefacts, stars
 located near the edge of a CCD, or very high proper motion stars
 (where the fraction of the flux collected within the photometric
-aperture might change signficiantly during a quarter). [Need to
-include a figure illustrating some of these]. We therefore flag these
-light curves so that they can be identified readily. 
-
-We now examine the behaviour of the range parameter $R$ (right
-hand-panel of Figure~\ref{fig:sig_ran_comp}). The CBV correction
-never increases $R$. This is so by design: the only circumstance in
-which removing systematics should increase $R$ is one where the
-systematics had somehow `conspired' to `cancel out' some of the real
-variability, which is unlikely. Aside from that, the before and after
-range comparison looks similar for the CBV and the PDC-MAP
-correction. Direct comparison between the two shows broad similarity
-(the median value of $R_{\rm PDC}/R_{\rm CBV}$ is 1.020 for the 4
-modouts considered in Q3) but with significant modout-to-modout
-differences.
-
-[Include discussion of individual modout behaviour]
+aperture might change signficiantly during a quarter). \textcolor{red}{Need to
+include a figure illustrating some of these.}
 
 
 
-\section{Discussion and conclusions}
-\label{sec:concl}
+%\section{Discussion and conclusions}
+%\label{sec:concl}
 
-\bsp
+\section*{Acknowledgements}
+HP has received support from the Leverhulme Research Project grant RPG-2012-661.
 
 \label{lastpage}
 
